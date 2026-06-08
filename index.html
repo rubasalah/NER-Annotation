@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arabic Medical Text Annotator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style_2.css">
+</head>
+
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <div class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">NER<br>Annotate</span>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Annotator</div>
+        <div class="annotator-badge" id="annotator-badge">—</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Progress</div>
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 60 60">
+            <circle class="ring-bg" cx="30" cy="30" r="24"/>
+            <circle class="ring-fill" id="ring-fill" cx="30" cy="30" r="24"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
+          </svg>
+          <div class="progress-center" id="progress-center">0%</div>
+        </div>
+        <div class="progress-text" id="progress-text">0 of 0 done</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Filter</div>
+        <div class="filter-group">
+          <button class="filter-btn active" id="f-all"       onclick="setFilter('all')">All</button>
+          <button class="filter-btn"        id="f-remaining" onclick="setFilter('remaining')">Remaining</button>
+          <button class="filter-btn"        id="f-finished"  onclick="setFilter('finished')">Finished</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Entity Legend</div>
+        <div class="legend-list">
+          <div class="legend-item"><span class="legend-dot disease"></span>Disease</div>
+          <div class="legend-item"><span class="legend-dot symptom"></span>Symptom</div>
+          <div class="legend-item"><span class="legend-dot drug"></span>Drug</div>
+          <div class="legend-item"><span class="legend-dot treatment"></span>Treatment</div>
+          <div class="legend-item"><span class="legend-dot anatomy"></span>Anatomy</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">How to use</div>
+        <ol class="how-to">
+          <li>Highlight text in abstract</li>
+          <li>Pick entity category</li>
+          <li>Review annotation list</li>
+          <li>Mark as Done when finished</li>
+        </ol>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="topbar">
+      <h1 class="page-title">Arabic Medical NER</h1>
+      <div class="topbar-right">
+        <div class="page-indicator" id="page-indicator">Page 1</div>
+      </div>
+    </div>
+
+    <div id="abstracts"></div>
+    <div id="pagination"></div>
+
+  </main>
+
+  <!-- POPUP -->
+  <div id="labelPopup" class="popup hidden">
+    <div class="popup-heading">Select entity type</div>
+    <button class="pop-btn disease"   onclick="applyLabel('Disease')">Disease</button>
+    <button class="pop-btn symptom"   onclick="applyLabel('Symptom')">Symptom</button>
+    <button class="pop-btn drug"      onclick="applyLabel('Drug')">Drug</button>
+    <button class="pop-btn treatment" onclick="applyLabel('Treatment')">Treatment</button>
+    <button class="pop-btn anatomy"   onclick="applyLabel('Anatomy')">Anatomy</button>
+    <button class="pop-btn cancel"    onclick="hidePopup()">✕ Cancel</button>
+  </div>
+
+  <!-- OVERLAP TOAST -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="annotation.js"></script>
+</body>
+</html>

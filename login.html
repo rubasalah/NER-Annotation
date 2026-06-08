@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arabic Medical Text Annotator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style_2.css">
+</head>
+
+<body class="login-page">
+  <!-- LOGIN OVERLAY -->
+  <!--<div id="login-overlay" style="display:flex;"> -->
+    <div class="login-container">
+    <div class="login-card">
+      <div class="login-icon">ع</div>
+      <div class="login-title">Arabic Medical Text Annotator</div>
+      <div class="login-desc">Sign in to continue</div>
+      <input id="login-name" type="text"
+        placeholder="Annotator name"
+        onkeydown="if(event.key==='Enter') submitLogin()">
+      <input id="login-pass" type="password"
+        placeholder="Password"
+        onkeydown="if(event.key==='Enter') submitLogin()">
+      <button onclick="submitLogin()">Sign In →</button>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
+
+  <!-- OVERLAP TOAST -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="login.js"></script>
+</body>
+</html>
