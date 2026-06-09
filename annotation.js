@@ -1,7 +1,7 @@
 /* =============================================
    CONFIGURATION
 ============================================= */
-const SHEET_URL      = "https://script.google.com/macros/s/AKfycbytc-czAnNwDVoCm3G-JRbhbhuxY89M2Oy3MUlMHFH1PZDiH34Ef11S1i6MDH_CteQ6mA/exec";
+const SHEET_URL      = "https://script.google.com/macros/s/AKfycbxz9KrTHaErxIYeiqdI5iLdrKgWN8NQPA_zZwUcXoqzlV_yb9T-aeVeGGUqFsHNf865Og/exec";
 //const ANNOTATOR_NAME = "Annotator_T";
 
 // ── LOGIN SCREEN ──
@@ -9,25 +9,26 @@ const SHEET_URL      = "https://script.google.com/macros/s/AKfycbytc-czAnNwDVoCm
    AUTHENTICATION
 ============================================= */
 
-const auth = localStorage.getItem("annotator_auth");
+const auth  = localStorage.getItem("annotator_auth");
+const token = localStorage.getItem("annotator_token");
+const annotatorName = localStorage.getItem("annotator_name");
 
-if (auth !== "true") {
+if (auth !== "true" || !token || !annotatorName) {
   window.location.href = "login.html";
 }
 
-const annotator =
-  localStorage.getItem("annotator_name");
-
-document.getElementById(
-  "annotator-badge"
-).textContent = annotator;
-
-
-const CURRENT_ANNOTATOR =
-  localStorage.getItem("annotator_name");
+document.getElementById("annotator-badge").textContent = annotatorName;
+const CURRENT_ANNOTATOR = annotatorName;
 
 function loadProgressFromSheet(annotator) {
-  const url = `${SHEET_URL}?type=load&annotator=${encodeURIComponent(annotator)}`;
+  const token =
+  localStorage.getItem("annotator_token") ||
+  sessionStorage.getItem("annotator_token");
+
+  const url =
+  `${SHEET_URL}?type=load` +
+  `&annotator=${encodeURIComponent(annotator)}` +
+  `&token=${encodeURIComponent(token)}`;
   
   return fetch(url)   // GET request — no CORS issue
     .then(r => r.json())
@@ -48,8 +49,25 @@ function loadProgressFromSheet(annotator) {
 }
 
   //fetch("test_abstracts.json")
-  fetch(SHEET_URL + "?type=abstracts")
-  .then(r => r.json())
+  function loadAbstracts() {
+  const token    = localStorage.getItem("annotator_token") || sessionStorage.getItem("annotator_token")
+  const annotator = localStorage.getItem("annotator_name");
+
+  if (!token || !annotator) {
+    showLoginScreen();
+    return Promise.reject("Not authenticated");
+  }
+
+  const url = `${SHEET_URL}?type=abstracts&annotator=${encodeURIComponent(annotator)}&token=${encodeURIComponent(token)}`;
+
+  return fetch(url)
+    .then(r => r.json())
+    .then(res => {
+      if (!res.ok) throw new Error("Unauthorized");
+      return res.data;
+    });
+  }
+  loadAbstracts()
   .then(data => {
 
     abstracts = data;
@@ -57,6 +75,15 @@ function loadProgressFromSheet(annotator) {
     abstracts.forEach(abs => {
       state.annotations[abs.abstract_id] = [];
     });
+
+    loadProgressFromSheet(CURRENT_ANNOTATOR)
+      .then(() => renderAll());
+
+  })
+  .catch(err => {
+    console.error(err);
+    window.location.href = "login.html";
+  });
 
     const annotator =
       localStorage.getItem("annotator_name");
@@ -69,7 +96,6 @@ function loadProgressFromSheet(annotator) {
       .then(() => renderAll());
   });
 
-
   function saveProgressToSheet(absId) {
   const annotator = localStorage.getItem("annotator_name");;
   fetch(SHEET_URL, {
@@ -79,6 +105,7 @@ function loadProgressFromSheet(annotator) {
     body:    JSON.stringify({
       type:        "progress",
       annotator,
+      token: localStorage.getItem("annotator_token") || sessionStorage.getItem("annotator_token"),
       abstract_id: absId,
       annotations: state.annotations[absId],
       completed:   state.completed.has(absId)
@@ -370,7 +397,7 @@ function applyLabel(label) {
       method:  "POST",
       mode:    "no-cors",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ annotator: CURRENT_ANNOTATOR, abstract_id: absId, start, end, text, label })
+      body:    JSON.stringify({ type: "annotation", annotator: CURRENT_ANNOTATOR, token: localStorage.getItem("annotator_token") || sessionStorage.getItem("annotator_token"), abstract_id: absId, start, end, text, label })
     }).catch(err => console.error("Sheet error:", err));
   }
   saveProgressToSheet(absId);
