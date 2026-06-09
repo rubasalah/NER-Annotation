@@ -1,8 +1,7 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxz9KrTHaErxIYeiqdI5iLdrKgWN8NQPA_zZwUcXoqzlV_yb9T-aeVeGGUqFsHNf865Og/exec";
 
-/* =============================================
-   ON PAGE LOAD — redirect if already logged in
-============================================= */
+//ON PAGE LOAD — redirect if already logged in
+
 document.addEventListener("DOMContentLoaded", () => {
   const auth  = localStorage.getItem("annotator_auth");
   const token = localStorage.getItem("annotator_token");
@@ -67,15 +66,14 @@ function submitLogin() {
       }
     })
     .catch(err => {
-     console.error("Login error:", err);
-   
-     errorEl.textContent =
-       "Unable to connect to the server.";
-   
-     btnEl.textContent = "Sign In";
-     btnEl.disabled = false;
-   });
-   }
+      console.error("Login error:", err);
 
-   
+      btnEl.textContent = "Sign In →";
+      btnEl.disabled    = false;
+    });
+}
 
+// ENTER KEY SUPPORT
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") submitLogin();
+});
