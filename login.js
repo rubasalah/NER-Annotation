@@ -1,27 +1,22 @@
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxz9KrTHaErxIYeiqdI5iLdrKgWN8NQPA_zZwUcXoqzlV_yb9T-aeVeGGUqFsHNf865Og/exec";
+const SHEET_URL      = "https://script.google.com/macros/s/AKfycbytc-czAnNwDVoCm3G-JRbhbhuxY89M2Oy3MUlMHFH1PZDiH34Ef11S1i6MDH_CteQ6mA/exec";
+//const ANNOTATOR_NAME = "Annotator_T";
 
+// ── LOGIN SCREEN ──
 /* =============================================
-   ON PAGE LOAD — redirect if already logged in
+   AUTHENTICATION
 ============================================= */
-document.addEventListener("DOMContentLoaded", () => {
-  const auth  = localStorage.getItem("annotator_auth");
-  const token = localStorage.getItem("annotator_token");
-  const name  = localStorage.getItem("annotator_name");
-
-  // Already logged in — go straight to tool
-  if (auth === "true" && token && name) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  // Show login form
+function showLoginScreen() {
+  console.log("showLoginScreen called");
   document.getElementById("login-container").style.display = "flex";
+  // Focus name field
   setTimeout(() => document.getElementById("login-name")?.focus(), 50);
-});
+}
 
-/* =============================================
-   SUBMIT LOGIN
-============================================= */
+
+function hideLoginScreen() {
+  document.getElementById("login-container").style.display = "none";
+}
+
 function submitLogin() {
   const nameEl  = document.getElementById("login-name");
   const passEl  = document.getElementById("login-pass");
@@ -40,72 +35,55 @@ function submitLogin() {
   btnEl.disabled    = true;
   errorEl.textContent = "";
 
-  const url = `${SHEET_URL}?type=auth&name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`;
-
-  fetch(url)
+  fetch(
+  `${SHEET_URL}?type=auth&name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`
+)
     .then(r => r.json())
     .then(res => {
-      if (res.ok && res.token) {
-        // Save everything to localStorage so it persists across refreshes
-        localStorage.setItem("annotator_name",  name);
-        localStorage.setItem("annotator_auth",  "true");
-        localStorage.setItem("annotator_token", res.token);
+      if (res.ok) {
+        sessionStorage.setItem("annotator_name", name);
+        sessionStorage.setItem("annotator_auth", "true");
+        window.ANNOTATOR_NAME_ACTIVE = name;
+        if (res.ok) {
 
-        // Also set sessionStorage for current session
-        sessionStorage.setItem("annotator_name",  name);
-        sessionStorage.setItem("annotator_auth",  "true");
-        sessionStorage.setItem("annotator_token", res.token);
+            localStorage.setItem(
+                "annotator_name",
+                name
+            );
 
-        window.location.href = "index.html";
+            localStorage.setItem(
+                "annotator_auth",
+                "true"
+            );
 
-      } else {
+            window.location.href =
+                "index.html";
+            }
+        } else {
         errorEl.textContent = "✗ Incorrect credentials. Please try again.";
         passEl.value = "";
         passEl.focus();
-        btnEl.textContent  = "Sign In →";
-        btnEl.disabled     = false;
+        btnEl.textContent = "Sign In →";
+        btnEl.disabled    = false;
       }
     })
-    .catch(err => {
-      console.error("Login error:", err);
-
-      // On localhost CORS error — warn but allow bypass for testing
-      if (window.location.hostname === "localhost" || 
-          window.location.hostname === "127.0.0.1") {
-        errorEl.textContent = "⚠ CORS blocked on localhost — deploy to Netlify to test login. Use test bypass below.";
-        errorEl.style.color = "#92400E";
-
-        // Local dev bypass — remove before sharing with annotators
-        const bypass = document.getElementById("dev-bypass");
-        if (bypass) bypass.style.display = "block";
-      } else {
-        errorEl.textContent = "✗ Could not reach server. Check your connection.";
-      }
-
+    .catch(() => {
+      errorEl.textContent = "✗ Could not reach server. Check your connection.";
       btnEl.textContent = "Sign In →";
       btnEl.disabled    = false;
     });
 }
 
-/* =============================================
-   DEV BYPASS — local testing only
-   This button is hidden in the HTML by default
-   Remove or keep hidden before deploying
-============================================= */
-function devBypass() {
-  const name = document.getElementById("login-name").value.trim() || "Annotator_T";
-  localStorage.setItem("annotator_name",  name);
-  localStorage.setItem("annotator_auth",  "true");
-  localStorage.setItem("annotator_token", "dev-token-local");
-  sessionStorage.setItem("annotator_name",  name);
-  sessionStorage.setItem("annotator_auth",  "true");
-  sessionStorage.setItem("annotator_token", "dev-token-local");
-  window.location.href = "index.html";
-}
+document.addEventListener("DOMContentLoaded", () => {
 
-/* =============================================
-   ENTER KEY SUPPORT
-============================================= */
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") submitLogin();
+  const auth =
+    localStorage.getItem("annotator_auth");
+
+  if (auth === "true") {
+
+    window.location.href =
+      "index.html";
+  }
+
+  showLoginScreen();
 });
