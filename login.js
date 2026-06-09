@@ -67,7 +67,15 @@ function submitLogin() {
       }
     })
     .catch(err => {
-      console.error("Login error:", err);
+     console.error("Login error:", err);
+   
+     errorEl.textContent =
+       "Unable to connect to the server.";
+   
+     btnEl.textContent = "Sign In";
+     btnEl.disabled = false;
+   });
+   }
 
    
 
