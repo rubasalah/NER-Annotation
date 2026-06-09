@@ -1,22 +1,27 @@
-const SHEET_URL      = "https://script.google.com/macros/s/AKfycbytc-czAnNwDVoCm3G-JRbhbhuxY89M2Oy3MUlMHFH1PZDiH34Ef11S1i6MDH_CteQ6mA/exec";
-//const ANNOTATOR_NAME = "Annotator_T";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxz9KrTHaErxIYeiqdI5iLdrKgWN8NQPA_zZwUcXoqzlV_yb9T-aeVeGGUqFsHNf865Og/exec";
 
-// ── LOGIN SCREEN ──
 /* =============================================
-   AUTHENTICATION
+   ON PAGE LOAD — redirect if already logged in
 ============================================= */
-function showLoginScreen() {
-  console.log("showLoginScreen called");
+document.addEventListener("DOMContentLoaded", () => {
+  const auth  = localStorage.getItem("annotator_auth");
+  const token = localStorage.getItem("annotator_token");
+  const name  = localStorage.getItem("annotator_name");
+
+  // Already logged in — go straight to tool
+  if (auth === "true" && token && name) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  // Show login form
   document.getElementById("login-container").style.display = "flex";
-  // Focus name field
   setTimeout(() => document.getElementById("login-name")?.focus(), 50);
-}
+});
 
-
-function hideLoginScreen() {
-  document.getElementById("login-container").style.display = "none";
-}
-
+/* =============================================
+   SUBMIT LOGIN
+============================================= */
 function submitLogin() {
   const nameEl  = document.getElementById("login-name");
   const passEl  = document.getElementById("login-pass");
@@ -35,55 +40,34 @@ function submitLogin() {
   btnEl.disabled    = true;
   errorEl.textContent = "";
 
-  fetch(
-  `${SHEET_URL}?type=auth&name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`
-)
+  const url = `${SHEET_URL}?type=auth&name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`;
+
+  fetch(url)
     .then(r => r.json())
     .then(res => {
-      if (res.ok) {
-        sessionStorage.setItem("annotator_name", name);
-        sessionStorage.setItem("annotator_auth", "true");
-        window.ANNOTATOR_NAME_ACTIVE = name;
-        if (res.ok) {
+      if (res.ok && res.token) {
+        // Save everything to localStorage so it persists across refreshes
+        localStorage.setItem("annotator_name",  name);
+        localStorage.setItem("annotator_auth",  "true");
+        localStorage.setItem("annotator_token", res.token);
 
-            localStorage.setItem(
-                "annotator_name",
-                name
-            );
+        // Also set sessionStorage for current session
+        sessionStorage.setItem("annotator_name",  name);
+        sessionStorage.setItem("annotator_auth",  "true");
+        sessionStorage.setItem("annotator_token", res.token);
 
-            localStorage.setItem(
-                "annotator_auth",
-                "true"
-            );
+        window.location.href = "index.html";
 
-            window.location.href =
-                "index.html";
-            }
-        } else {
+      } else {
         errorEl.textContent = "✗ Incorrect credentials. Please try again.";
         passEl.value = "";
         passEl.focus();
-        btnEl.textContent = "Sign In →";
-        btnEl.disabled    = false;
+        btnEl.textContent  = "Sign In →";
+        btnEl.disabled     = false;
       }
     })
-    .catch(() => {
-      errorEl.textContent = "✗ Could not reach server. Check your connection.";
-      btnEl.textContent = "Sign In →";
-      btnEl.disabled    = false;
-    });
-}
+    .catch(err => {
+      console.error("Login error:", err);
 
-document.addEventListener("DOMContentLoaded", () => {
+   
 
-  const auth =
-    localStorage.getItem("annotator_auth");
-
-  if (auth === "true") {
-
-    window.location.href =
-      "index.html";
-  }
-
-  showLoginScreen();
-});
