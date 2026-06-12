@@ -241,14 +241,16 @@ function captureSelection(event, abstractId) {
   state.pendingAbstractId = abstractId;
 
   const popup = document.getElementById("labelPopup");
+
   popup.classList.remove("hidden");
-  //const range = selection.getRangeAt(0);
-  const rect  = range.getBoundingClientRect();
-  const px    = Math.min(event.pageX, window.innerWidth  - popup.offsetWidth  - 12);
-  const py    = Math.min(event.pageY + window.scrollY,
-                         window.scrollY + window.innerHeight - popup.offsetHeight - 12);
-  popup.style.left = Math.max(8, px) + "px";
-  popup.style.top  = Math.max(8, py) + "px";
+  
+  const rect = range.getBoundingClientRect();
+  
+  popup.style.left =
+    Math.min(rect.left, window.innerWidth - 200) + "px";
+  
+  popup.style.top =
+    Math.min(rect.bottom + 8, window.innerHeight - 250) + "px";
 }
 
 function renderAnnotatedText(text, annotations) {
