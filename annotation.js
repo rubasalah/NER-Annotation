@@ -302,7 +302,6 @@ function getTextOffset(container, targetNode, targetOffset) {
 //APPLY LABEL
 let _suppressPopupClose = false;
 
-// Update applyLabel to set the flag
 function applyLabel(label) {
   if (!state.pendingSelection || state.pendingAbstractId === null) return;
 
@@ -312,27 +311,32 @@ function applyLabel(label) {
   state.annotations[absId].push({ abstractId: absId, text, start, end, label });
   window.getSelection()?.removeAllRanges();
 
-  _suppressPopupClose = true;   
+  _suppressPopupClose = true;
   hidePopup();
   renderAll();
-  setTimeout(() => { _suppressPopupClose = false; }, 100);  
+  setTimeout(() => { _suppressPopupClose = false; }, 100);
 
-  if (!SHEET_URL.includes("YOUR_DEPLOYMENT")) {
-    fetch(SHEET_URL, {
-      method:  "POST",
-      mode:    "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ annotator: CURRENT_ANNOTATOR, abstract_id: absId, start, end, text, label })
-    }).catch(err => console.error("Sheet error:", err));
-  }
+  fetch(SHEET_URL, {
+    method:  "POST",
+    mode:    "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({
+      type:        "annotation",
+      annotator:   CURRENT_ANNOTATOR,
+      token:       localStorage.getItem("annotator_token"),
+      abstract_id: absId,
+      start, end, text, label
+    })
+  }).catch(err => console.error("Sheet error:", err));
+
   saveProgressToSheet(absId);
 }
 
 // Update mousedown listener to check the flag
 document.addEventListener("mousedown", e => {
-  if (_suppressPopupClose) return;   
+  if (_suppressPopupClose) return;
   const popup = document.getElementById("labelPopup");
-  if (!popup.classList.contains("hidden") && !popup.contains(e.target)) {
+  if (popup && !popup.classList.contains("hidden") && !popup.contains(e.target)) {
     window.getSelection()?.removeAllRanges();
     hidePopup();
   }
