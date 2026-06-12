@@ -1,14 +1,9 @@
-/* =============================================
-   CONFIGURATION
-============================================= */
+
+//CONFIGURATION
 const SHEET_URL      = "https://script.google.com/macros/s/AKfycbyZ0u_14oI9Nha9zZcPETZf9jLaJOr-RjB5twlGChtj4tJuVnWYf2B_JgxsCaI1KfNKkw/exec";
 //const ANNOTATOR_NAME = "Annotator_T";
 
-// ── LOGIN SCREEN ──
-/* =============================================
-   AUTHENTICATION
-============================================= */
-
+//AUTHENTICATION
 const auth = localStorage.getItem("annotator_auth");
 
 if (auth !== "true") {
@@ -29,7 +24,7 @@ const CURRENT_ANNOTATOR =
 function loadProgressFromSheet(annotator) {
   const url = `${SHEET_URL}?type=load&annotator=${encodeURIComponent(annotator)}`;
   
-  return fetch(url)   // GET request — no CORS issue
+  return fetch(url)   // GET request
     .then(r => r.json())
     .then(res => {
       if (!res.ok || !res.data) return;
@@ -85,14 +80,6 @@ function loadProgressFromSheet(annotator) {
     })
   }).catch(err => console.error("Save error:", err));
 }
-
-/* =============================================
-   STATE
-   BUG FIX: state must be declared BEFORE fetch()
-   and BEFORE any function that references it.
-   Original code declared state AFTER fetch() —
-   this caused a ReferenceError on load.
-============================================= */
 const state = {
   annotations:       {},
   completed:         new Set(),
@@ -106,30 +93,12 @@ const state = {
 
 let abstracts = [];
 
-/* =============================================
-   LOAD DATA
-============================================= */
-
-
-/* =============================================
-   OVERLAP DETECTION
-   BUG FIX: Original code had no overlap check.
-   Same span could be annotated multiple times.
-============================================= */
+//LOAD DATA
 function hasOverlap(absId, newStart, newEnd) {
   return (state.annotations[absId] || []).some(a =>
     newStart < a.end && newEnd > a.start
   );
 }
-
-/* =============================================
-   RENDER ANNOTATED TEXT
-   BUG FIX: Original used innerHTML +=
-   which re-renders and loses event bindings.
-   Now builds full string and sets once.
-   BUG FIX: Added removeAnnotation call on span click.
-============================================= */
-
 
 function escHtml(s) {
   return String(s)
@@ -142,10 +111,10 @@ function escHtml(s) {
 function normalizeArabic(text) {
   if (!text || !text.trim()) return "";
 
-  // 1. Normalize unicode (compatibility — e.g. ligatures → base chars)
+  // 1. Normalize unicode 
   text = text.normalize("NFKC");
 
-  // 2. Remove diacritics / tashkeel (harakat + shadda + sukun + tanwin)
+  // 2. Remove diacritics
   text = text.replace(/[\u064B-\u065F\u0670]/g, "");
 
   // 3. Remove tatweel (kashida)
@@ -216,15 +185,6 @@ function mapNormalizedToOriginal(original, normalizedIdx) {
   return original.length;
 }
 
-/* =============================================
-   CAPTURE SELECTION
-   BUG FIX: Original captureSelection used
-   range.cloneRange() then selectNodeContents()
-   but didn't guard against empty selections or
-   selections outside the target container.
-   Also popup was placed at pageX/pageY which
-   can clip off-screen — now clamped.
-============================================= */
 function captureSelection(event, abstractId) {
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed) return;
@@ -237,8 +197,6 @@ function captureSelection(event, abstractId) {
 
   // Find this text in the original
   //const start = findOccurrence(originalText, text, state.annotations[abstractId]);
-
-  // Inside captureSelection, replace the findOccurrence call with:
    const range     = selection.getRangeAt(0);
     const container = document.getElementById(`arabic-${abstractId}`);
     if (!container) return;
@@ -314,8 +272,6 @@ function renderAnnotatedText(text, annotations) {
   return result;
 }
 
-/* Walk DOM text nodes to get true character offset
-   relative to the plain text content of container */
 function getTextOffset(container, targetNode, targetOffset) {
   let offset = 0;
   const walker = document.createTreeWalker(
@@ -343,11 +299,7 @@ function getTextOffset(container, targetNode, targetOffset) {
   return -1;
 }
 
-/* =============================================
-   APPLY LABEL
-============================================= */
-
-// Add this at the top with your other state variables
+//APPLY LABEL
 let _suppressPopupClose = false;
 
 // Update applyLabel to set the flag
@@ -360,10 +312,10 @@ function applyLabel(label) {
   state.annotations[absId].push({ abstractId: absId, text, start, end, label });
   window.getSelection()?.removeAllRanges();
 
-  _suppressPopupClose = true;   // ← suppress the mousedown listener
+  _suppressPopupClose = true;   
   hidePopup();
   renderAll();
-  setTimeout(() => { _suppressPopupClose = false; }, 100);  // ← re-enable after render
+  setTimeout(() => { _suppressPopupClose = false; }, 100);  
 
   if (!SHEET_URL.includes("YOUR_DEPLOYMENT")) {
     fetch(SHEET_URL, {
@@ -378,7 +330,7 @@ function applyLabel(label) {
 
 // Update mousedown listener to check the flag
 document.addEventListener("mousedown", e => {
-  if (_suppressPopupClose) return;   // ← skip if suppressed
+  if (_suppressPopupClose) return;   
   const popup = document.getElementById("labelPopup");
   if (!popup.classList.contains("hidden") && !popup.contains(e.target)) {
     window.getSelection()?.removeAllRanges();
@@ -386,9 +338,7 @@ document.addEventListener("mousedown", e => {
   }
 });
 
-/* =============================================
-   REMOVE ANNOTATION
-============================================= */
+//REMOVE ANNOTATION
 function removeAnnotationByIndex(absId, idx) {
   state.annotations[absId].splice(idx, 1);
   renderAll();
@@ -403,9 +353,8 @@ function removeAnnotationBySpan(absId, start, end) {
   saveProgressToSheet(absId);
 }
 
-/* =============================================
-   TOGGLE HELPERS
-============================================= */
+//TOGGLE HELPERS
+
 function toggleAbstract(id) {
   state.hidden.has(id) ? state.hidden.delete(id) : state.hidden.add(id);
   renderAll();
@@ -425,12 +374,9 @@ function toggleEnglish(id) {
   link.textContent    = open ? "Show English reference" : "Hide English reference";
 }
 
-/* =============================================
-   FILTER & PAGINATION
-============================================= */
 function setFilter(mode) {
   state.filter      = mode;
-  state.currentPage = 1;    /* BUG FIX: reset to page 1 on filter change */
+  state.currentPage = 1;  
   document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
   const map = { all: "f-all", remaining: "f-remaining", finished: "f-finished" };
   document.getElementById(map[mode])?.classList.add("active");
@@ -444,26 +390,13 @@ function prevPage() {
   if (state.currentPage > 1) { state.currentPage--; renderAll(); window.scrollTo(0,0); }
 }
 
-/* =============================================
-   POPUP
-============================================= */
 function hidePopup() {
   document.getElementById("labelPopup").classList.add("hidden");
   state.pendingSelection  = null;
   state.pendingAbstractId = null;
 }
 
-document.addEventListener("mousedown", e => {
-  const popup = document.getElementById("labelPopup");
-  if (!popup.classList.contains("hidden") && !popup.contains(e.target)) {
-    window.getSelection()?.removeAllRanges();
-    hidePopup();
-  }
-});
-
-/* =============================================
-   TOAST
-============================================= */
+//TOAST
 let toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -477,37 +410,34 @@ function showToast(msg) {
   }, 3000);
 }
 
-/* =============================================
-   RENDER ALL
-============================================= */
 function renderAll() {
 
-  // ── Save scroll position before re-render ──
+  // ── Save scroll position before re-render 
   const scrollY = window.scrollY;
 
   const container = document.getElementById("abstracts");
   container.innerHTML = "";
 
-  /* filter */
+  //filter 
   let visible = abstracts;
   if (state.filter === "remaining") visible = abstracts.filter(a => !state.completed.has(a.abstract_id));
   if (state.filter === "finished")  visible = abstracts.filter(a =>  state.completed.has(a.abstract_id));
 
-  /* pagination */
+  // pagination 
   const totalPages = Math.max(1, Math.ceil(visible.length / state.pageSize));
   if (state.currentPage > totalPages) state.currentPage = totalPages;
 
   const start  = (state.currentPage - 1) * state.pageSize;
   const paged  = visible.slice(start, start + state.pageSize);
 
-  /* update page indicator */
+  // update page indicator 
   document.getElementById("page-indicator").textContent =
     `Page ${state.currentPage} of ${totalPages}`;
 
-  /* update progress */
+  // update progress 
   updateProgress();
 
-  /* render cards */
+  // render cards 
   paged.forEach(abs => {
     const done   = state.completed.has(abs.abstract_id);
     const hidden = state.hidden.has(abs.abstract_id);
@@ -516,7 +446,7 @@ function renderAll() {
     const card = document.createElement("div");
     card.className = "abstract-card" + (done ? " finished" : "");
 
-    /* header */
+    // header 
     card.innerHTML = `
       <div class="abstract-header${hidden ? "" : " open"}">
         <div class="abstract-id-wrap">
@@ -573,20 +503,18 @@ function renderAll() {
     container.appendChild(card);
   });
 
-  /* pagination controls */
+  // pagination controls 
   document.getElementById("pagination").innerHTML = `
     <button class="pag-btn" onclick="prevPage()" ${state.currentPage === 1 ? "disabled" : ""}>← Previous</button>
     <span class="pag-label">Page ${state.currentPage} of ${totalPages}</span>
     <button class="pag-btn" onclick="nextPage(${totalPages})" ${state.currentPage === totalPages ? "disabled" : ""}>Next →</button>
   `;
 
-  // ── Restore scroll position after re-render ──
+  // Restore scroll position after re-render 
   window.scrollTo(0, scrollY);
 }
 
-/* =============================================
-   PROGRESS
-============================================= */
+//progress 
 function updateProgress() {
   const total = abstracts.length;
   const done  = state.completed.size;
@@ -595,7 +523,7 @@ function updateProgress() {
   document.getElementById("progress-text").textContent = `${done} of ${total} done`;
   document.getElementById("progress-center").textContent = pct + "%";
 
-  /* ring */
+  // ring 
   const circ   = 150.8;
   const offset = circ - (pct / 100) * circ;
   document.getElementById("ring-fill").style.strokeDashoffset = offset;
