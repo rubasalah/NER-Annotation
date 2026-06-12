@@ -1,10 +1,9 @@
 const SHEET_URL      = "https://script.google.com/macros/s/AKfycbyZ0u_14oI9Nha9zZcPETZf9jLaJOr-RjB5twlGChtj4tJuVnWYf2B_JgxsCaI1KfNKkw/exec";
 //const ANNOTATOR_NAME = "Annotator_T";
 
-// ── LOGIN SCREEN ──
-/* =============================================
-   AUTHENTICATION
-============================================= */
+// login page
+
+// authentication
 function showLoginScreen() {
   console.log("showLoginScreen called");
   document.getElementById("login-container").style.display = "flex";
